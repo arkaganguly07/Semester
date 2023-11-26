@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:project/info_handler/app_info.dart';
+// import 'package:project/screens/drivers/driver_reg_screen.dart';
 import 'package:project/screens/login_screen.dart';
 import 'package:project/screens/main_screen.dart';
 import 'package:project/screens/register_screen.dart';
@@ -44,7 +45,7 @@ class MyApp extends StatelessWidget {
         theme: MyThemes.lightTheme,
         darkTheme: MyThemes.darkTheme,
         debugShowCheckedModeBanner: false,
-        home: SplashScreen(),
+        home: const SplashScreen(),
       ),
     );
   }

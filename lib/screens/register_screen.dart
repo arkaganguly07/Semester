@@ -78,7 +78,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   height: 20.0,
                 ),
                 Text(
-                  'Sign In',
+                  'User Sign In',
                   style: TextStyle(
                     color: darkTheme ? Colors.amber.shade400 : Colors.blue,
                     fontSize: 25.0,

@@ -1,7 +1,13 @@
 import 'dart:async';
-import 'dart:core';
+// import 'dart:core';
+// import 'dart:js';
 
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_database/firebase_database.dart';
+import 'package:firebase_database/ui/firebase_animated_list.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:geocoder2/geocoder2.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:location/location.dart' as loc;
@@ -13,6 +19,7 @@ import 'package:provider/provider.dart';
 
 import '../models/directions.dart';
 
+
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
 
@@ -21,6 +28,55 @@ class MainScreen extends StatefulWidget {
 }
 
 class _MainScreenState extends State<MainScreen> {
+
+  final pickUpTextEditingController = TextEditingController();
+  final dropOffTextEditingController = TextEditingController();
+  final seatTextEditingController = TextEditingController();
+
+  final _formKey = GlobalKey<FormState>();
+  
+  void _submit() async {
+    //   validate all the form fields
+    // if (_formKey.currentState!.validate()) {
+    //   await firebaseAuth.createUserWithEmailAndPassword(
+    //     email: emailTextEditingController.text.trim(),
+    //     password: passwordTextEditingController.text.trim(),
+    //   ).then((auth) async {
+    //     currentUser = auth.user;
+    //     if (currentUser != null) {
+    //       Map userMap = {
+    //         "id": currentUser!.uid,
+    //         "name": nameTextEditingController.text.trim(),
+    //         "email": emailTextEditingController.text.trim(),
+    //         "phone": phoneTextEditingController.text.trim(),
+    //         "address": addressTextEditingController.text.trim(),
+    //       };
+    //
+    //       DatabaseReference userRef = FirebaseDatabase.instance.ref().child("users");
+    //       userRef.child(currentUser!.uid).set(userMap);
+    //     }
+    //
+    //     await Fluttertoast.showToast(msg: 'Successfully Registered');
+    //     Navigator.push(context, MaterialPageRoute(builder: (c) => MainScreen()));
+    //   }).catchError((errorMessage) {
+    //     Fluttertoast.showToast(msg: "Error!! \n $errorMessage");
+    //   });
+    // }
+    if (_formKey.currentState!.validate()) {
+      Fluttertoast.showToast(msg: "Auto booked");
+    } else {
+      Fluttertoast.showToast(msg: "Not all fields are valid");
+    }
+  }
+
+  // String _dropdownValue = '1';
+  //
+  // var _items = [
+  //   '1',
+  //   '2',
+  //   '3',
+  //   '4',
+  // ];
 
   LatLng? pickLocation;
   loc.Location location = loc.Location();
@@ -110,146 +166,340 @@ class _MainScreenState extends State<MainScreen> {
     }
   }
 
+  // final _formKey = GlobalKey<FormState>();
+
   @override
   Widget build(BuildContext context) {
 
     bool darkTheme = MediaQuery.of(context).platformBrightness == Brightness.dark;
+
 
     return GestureDetector(
       onTap: () {
         FocusScope.of(context).unfocus();
       },
       child: Scaffold(
-        body: Stack(
+        body: ListView(
+          padding: const EdgeInsets.all(0.0),
           children: [
-            GoogleMap(
-              initialCameraPosition: _kGooglePlex,
-              mapType: MapType.normal,
-              myLocationEnabled: true,
-              zoomControlsEnabled: true,
-              zoomGesturesEnabled: true,
-              polylines: polyLineSet,
-              markers: markersSet,
-              circles: circlesSet,
-              onMapCreated: (GoogleMapController controller) {
-                _controllerGoogleMap.complete(controller);
-                newGoogleMapController = controller;
-
-                setState(() {
-
-                });
-
-                locateUserPosition();
-              },
-              onCameraMove: (CameraPosition? position) {
-                if (pickLocation != position!.target) {
-                  setState(() {
-                    pickLocation = position.target;
-                  });
-                }
-              },
-              onCameraIdle: () {
-                getAddressFromLatLng();
-              },
-            ),
-            Align(
-              alignment: Alignment.center,
-              child: Padding(
-                padding: const EdgeInsets.only(bottom: 35.0),
-                child: Image.network("https://media.istockphoto.com/id/1135275961/vector/location-icon.jpg?s=612x612&w=is&k=20&c=jBi3l0UBU3paubj0F9zWKD6kND5-lo8D9nk6srYzhFo=", height: 45, width: 45,),
-              ),
-            ),
-            Positioned(
-              bottom: 0,
-              left: 0,
-              right: 0,
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(20, 50, 20, 20),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(10),
-                        color: darkTheme ? Colors.grey.shade900 : Colors.grey.shade100,
-                      ),
-                      child: Column(
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.all(5),
-                            child: Row(
-                              children: [
-                                Icon(Icons.location_on_outlined, color: darkTheme ? Colors.amber.shade400 : Colors.blue,),
-                                const SizedBox(width:10,),
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      "From",
-                                      style: TextStyle(
-                                        color: darkTheme ? Colors.amber.shade400 : Colors.blue,
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                    Text(
-                                      Provider.of<AppInfo>(context).userPickUpLocation != null ? "${(Provider.of<AppInfo>(context).userPickUpLocation!.locationName!).substring(0, 24)}..." : "Not getting address",
-                                      style: const TextStyle(color: Colors.grey, fontSize: 14),
-                                    )
-                                  ],
-                                )
-                              ],
-                            ),
-                          ),
-
-                          const SizedBox(height: 5,),
-
-                          Divider(
-                            height: 1,
-                            thickness: 2,
-                            color: darkTheme ? Colors.amber.shade400 : Colors.blue,
-                          ),
-
-                          const SizedBox(height: 5,),
-
-                          Padding(
-                            padding: const EdgeInsets.all(5),
-                            child: GestureDetector(
-                              onTap: () {},
-                              child: Row(
-                                children: [
-                                  Icon(Icons.location_on_outlined, color: darkTheme ? Colors.amber.shade400 : Colors.blue,),
-                                  const SizedBox(width:10,),
-                                  Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        "From",
-                                        style: TextStyle(
-                                          color: darkTheme ? Colors.amber.shade400 : Colors.blue,
-                                          fontSize: 12,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                      Text(
-                                        Provider.of<AppInfo>(context).userPickUpLocation != null ? "${(Provider.of<AppInfo>(context).userPickUpLocation!.locationName!).substring(0, 24)}..." : "Not getting address",
-                                        style: const TextStyle(color: Colors.grey, fontSize: 14),
-                                      )
-                                    ],
-                                  )
-                                ],
-                              ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    )
-                  ],
+            Column(
+              children: [
+                const SizedBox(height: 10.0,),
+                Text(
+                  'User Journey Details',
+                  style: TextStyle(
+                    color: darkTheme ? Colors.amber.shade400 : Colors.blue,
+                    fontSize: 25.0,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
-              ),
-            ),
+
+                const SizedBox(height: 20.0,),
+
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(15.0, 20.0, 15.0, 50.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Form(
+                        key: _formKey,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            TextFormField(
+                              inputFormatters: [
+                                LengthLimitingTextInputFormatter(null),
+                              ],
+                              decoration: InputDecoration(
+                                hintText: 'Enter Pick Up Location',
+                                hintStyle: const TextStyle(
+                                  color: Colors.grey,
+                                ),
+                                filled: true,
+                                fillColor: darkTheme ? Colors.black45 : Colors.grey.shade200,
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(40.0),
+                                  borderSide: const BorderSide(
+                                    width: 0,
+                                    style: BorderStyle.none,
+                                  ),
+                                ),
+                                prefixIcon: Icon(Icons.location_on_outlined, color: darkTheme ? Colors.amber.shade400 : Colors.grey,),
+                              ),
+                              autovalidateMode: AutovalidateMode.onUserInteraction,
+                              validator: (text) {
+                                if (text == null || text.isEmpty) {
+                                  return 'Pick Up Location can\'t be empty';
+                                }
+                                if (text.length < 2) {
+                                  return 'Please enter a valid pick up location';
+                                }
+                              },
+                              onChanged: (text) => setState(() {
+                                pickUpTextEditingController.text = text;
+                              }),
+                            ),
+
+                            const SizedBox(height: 10.0,),
+
+                            TextFormField(
+                              inputFormatters: [
+                                LengthLimitingTextInputFormatter(null),
+                              ],
+                              decoration: InputDecoration(
+                                hintText: 'Enter Drop Off Location',
+                                hintStyle: const TextStyle(
+                                  color: Colors.grey,
+                                ),
+                                filled: true,
+                                fillColor: darkTheme ? Colors.black45 : Colors.grey.shade200,
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(40.0),
+                                  borderSide: const BorderSide(
+                                    width: 0,
+                                    style: BorderStyle.none,
+                                  ),
+                                ),
+                                prefixIcon: Icon(Icons.location_on, color: darkTheme ? Colors.amber.shade400 : Colors.grey,),
+                              ),
+                              autovalidateMode: AutovalidateMode.onUserInteraction,
+                              validator: (text) {
+                                if (text == null || text.isEmpty)
+                                {
+                                  return 'Drop Off location can\'t be empty';
+                                }
+                                // if (EmailValidator.validate(text) == true) {
+                                //   return null;
+                                // }
+                                if (text.length < 2)
+                                {
+                                  return 'Please enter a valid location';
+                                }
+                                // if (text.length > 99)
+                                // {
+                                //   return 'Email can\'t be more than 100 characters';
+                                // }
+                              },
+                              onChanged: (text) => setState(() {
+                                dropOffTextEditingController.text = text;
+                              }),
+                            ),
+
+                            const SizedBox(height: 10.0,),
+
+                            TextFormField(
+                              inputFormatters: [
+                                LengthLimitingTextInputFormatter(null),
+                              ],
+                              decoration: InputDecoration(
+                                hintText: 'Enter Number of Seats between 1 to 4',
+                                hintStyle: const TextStyle(
+                                  color: Colors.grey,
+                                ),
+                                filled: true,
+                                fillColor: darkTheme ? Colors.black45 : Colors.grey.shade200,
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(40.0),
+                                  borderSide: const BorderSide(
+                                    width: 0,
+                                    style: BorderStyle.none,
+                                  ),
+                                ),
+                                prefixIcon: Icon(Icons.people_alt, color: darkTheme ? Colors.amber.shade400 : Colors.grey,),
+                              ),
+                              autovalidateMode: AutovalidateMode.onUserInteraction,
+                              validator: (text) {
+                                if (text == null || text.isEmpty)
+                                {
+                                  return 'Number of seats can\'t be empty';
+                                }
+                                // if (EmailValidator.validate(text) == true) {
+                                //   return null;
+                                // }
+                                // if (text.length < 2)
+                                // {
+                                //   return 'Please enter a valid email';
+                                // }
+                                // if (text.length > 1)
+                                // {
+                                //   return 'Email can\'t be more than 100 characters';
+                                // }
+                              },
+                              onChanged: (text) => setState(() {
+                                seatTextEditingController.text = text;
+                              }),
+                            ),
+
+                            const SizedBox(height: 10.0,),
+
+                            ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                foregroundColor: darkTheme ? Colors.black : Colors.white,
+                                backgroundColor: darkTheme ? Colors.amber.shade400 : Colors.blue,
+                                elevation: 0,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(32.0),
+                                ),
+                                minimumSize: const Size(double.infinity, 50),
+                              ),
+                              onPressed: () {
+                                _submit();
+                              },
+                              child: const Text(
+                                'Search Ride',
+                                style: TextStyle(
+                                  fontSize: 20.0,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            )
+          ],
+        ),
+      ),
+    );
+
+    // return GestureDetector(
+    //   onTap: () {
+    //     FocusScope.of(context).unfocus();
+    //   },
+    //   child: Scaffold(
+    //     body: Stack(
+    //       children: [
+    //         GoogleMap(
+    //           initialCameraPosition: _kGooglePlex,
+    //           mapType: MapType.normal,
+    //           myLocationEnabled: true,
+    //           zoomControlsEnabled: true,
+    //           zoomGesturesEnabled: true,
+    //           polylines: polyLineSet,
+    //           markers: markersSet,
+    //           circles: circlesSet,
+    //           onMapCreated: (GoogleMapController controller) {
+    //             _controllerGoogleMap.complete(controller);
+    //             newGoogleMapController = controller;
+    //
+    //             setState(() {
+    //
+    //             });
+    //
+    //             locateUserPosition();
+    //           },
+    //           onCameraMove: (CameraPosition? position) {
+    //             if (pickLocation != position!.target) {
+    //               setState(() {
+    //                 pickLocation = position.target;
+    //               });
+    //             }
+    //           },
+    //           onCameraIdle: () {
+    //             getAddressFromLatLng();
+    //           },
+    //         ),
+    //         Align(
+    //           alignment: Alignment.center,
+    //           child: Padding(
+    //             padding: const EdgeInsets.only(bottom: 35.0),
+    //             child: Image.network("https://media.istockphoto.com/id/1135275961/vector/location-icon.jpg?s=612x612&w=is&k=20&c=jBi3l0UBU3paubj0F9zWKD6kND5-lo8D9nk6srYzhFo=", height: 45, width: 45,),
+    //           ),
+    //         ),
+    //         Positioned(
+    //           bottom: 0,
+    //           left: 0,
+    //           right: 0,
+    //           child: Padding(
+    //             padding: const EdgeInsets.fromLTRB(20, 50, 20, 20),
+    //             child: Column(
+    //               mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    //               children: [
+    //                 Container(
+    //                   padding: const EdgeInsets.all(10),
+    //                   decoration: BoxDecoration(
+    //                     borderRadius: BorderRadius.circular(10),
+    //                     color: darkTheme ? Colors.grey.shade900 : Colors.grey.shade100,
+    //                   ),
+    //                   child: Column(
+    //                     children: [
+    //                       Padding(
+    //                         padding: const EdgeInsets.all(5),
+    //                         child: Row(
+    //                           children: [
+    //                             Icon(Icons.location_on_outlined, color: darkTheme ? Colors.amber.shade400 : Colors.blue,),
+    //                             const SizedBox(width:10,),
+    //                             Column(
+    //                               crossAxisAlignment: CrossAxisAlignment.start,
+    //                               children: [
+    //                                 Text(
+    //                                   "From",
+    //                                   style: TextStyle(
+    //                                     color: darkTheme ? Colors.amber.shade400 : Colors.blue,
+    //                                     fontSize: 12,
+    //                                     fontWeight: FontWeight.bold,
+    //                                   ),
+    //                                 ),
+    //                                 Text(
+    //                                   Provider.of<AppInfo>(context).userPickUpLocation != null ? "${(Provider.of<AppInfo>(context).userPickUpLocation!.locationName!).substring(0, 24)}..." : "Not getting address",
+    //                                   style: const TextStyle(color: Colors.grey, fontSize: 14),
+    //                                 )
+    //                               ],
+    //                             )
+    //                           ],
+    //                         ),
+    //                       ),
+    //
+    //                       const SizedBox(height: 5,),
+    //
+    //                       Divider(
+    //                         height: 1,
+    //                         thickness: 2,
+    //                         color: darkTheme ? Colors.amber.shade400 : Colors.blue,
+    //                       ),
+    //
+    //                       const SizedBox(height: 5,),
+    //
+    //                       Padding(
+    //                         padding: const EdgeInsets.all(5),
+    //                         child: GestureDetector(
+    //                           onTap: () {},
+    //                           child: Row(
+    //                             children: [
+    //                               Icon(Icons.location_on_outlined, color: darkTheme ? Colors.amber.shade400 : Colors.blue,),
+    //                               const SizedBox(width:10,),
+    //                               Column(
+    //                                 crossAxisAlignment: CrossAxisAlignment.start,
+    //                                 children: [
+    //                                   Text(
+    //                                     "From",
+    //                                     style: TextStyle(
+    //                                       color: darkTheme ? Colors.amber.shade400 : Colors.blue,
+    //                                       fontSize: 12,
+    //                                       fontWeight: FontWeight.bold,
+    //                                     ),
+    //                                   ),
+    //                                   Text(
+    //                                     Provider.of<AppInfo>(context).userPickUpLocation != null ? "${(Provider.of<AppInfo>(context).userPickUpLocation!.locationName!).substring(0, 24)}..." : "Not getting address",
+    //                                     style: const TextStyle(color: Colors.grey, fontSize: 14),
+    //                                   )
+    //                                 ],
+    //                               )
+    //                             ],
+    //                           ),
+    //                           ),
+    //                         ),
+    //                     ],
+    //                   ),
+    //                 )
+    //               ],
+    //             ),
+    //           ),
+    //         ),
             
             
             // Positioned(
@@ -269,9 +519,9 @@ class _MainScreenState extends State<MainScreen> {
             //     ),
             //   ),
             // )
-          ],
-        ),
-      ),
-    );
+    //       ],
+    //     ),
+    //   ),
+    // );
   }
 }

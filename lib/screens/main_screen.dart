@@ -394,10 +394,11 @@ class _MainScreenState extends State<MainScreen> {
                             ),
 
                             const SizedBox(height: 10.0,),
-
-                            Text(responseData),
                           ],
                         ),
+                      ),
+                      Text(
+                        responseData,
                       ),
                     ],
                   ),

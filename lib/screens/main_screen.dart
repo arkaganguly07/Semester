@@ -43,11 +43,11 @@ class _MainScreenState extends State<MainScreen> {
 
     if (_formKey.currentState!.validate()) {
       Future<void> sendData(BuildContext context) async {
-        final Uri uri = Uri.parse('');
+        final Uri uri = Uri.parse('https://test1-mk8a.onrender.com/api/reserve-ride');
 
         final Map<String, dynamic> formData = {
           'pickup': pickUpTextEditingController.text.trim(),
-          'dropoff': dropOffTextEditingController.text.trim(),
+          'drop': dropOffTextEditingController.text.trim(),
           'seats': seatTextEditingController.text.trim(),
         };
 
@@ -397,9 +397,7 @@ class _MainScreenState extends State<MainScreen> {
                           ],
                         ),
                       ),
-                      Text(
-                        responseData,
-                      ),
+                      Text(responseData),
                     ],
                   ),
                 ),

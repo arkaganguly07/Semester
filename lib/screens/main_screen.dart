@@ -15,7 +15,9 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:project/assistants/assistant_methods.dart';
 import 'package:project/global/global.dart';
 import 'package:project/info_handler/app_info.dart';
+import 'package:project/screens/result_screen.dart';
 import 'package:provider/provider.dart';
+import 'package:http/http.dart' as http;
 
 import '../models/directions.dart';
 
@@ -33,9 +35,46 @@ class _MainScreenState extends State<MainScreen> {
   final dropOffTextEditingController = TextEditingController();
   final seatTextEditingController = TextEditingController();
 
+  String responseData = '';
+
   final _formKey = GlobalKey<FormState>();
   
   void _submit() async {
+
+    if (_formKey.currentState!.validate()) {
+      Future<void> sendData(BuildContext context) async {
+        final Uri uri = Uri.parse('');
+
+        final Map<String, dynamic> formData = {
+          'pickup': pickUpTextEditingController.text.trim(),
+          'dropoff': dropOffTextEditingController.text.trim(),
+          'seats': seatTextEditingController.text.trim(),
+        };
+
+        // final queryParameter = {
+        //   'pickup': pickUpTextEditingController.text.trim(),
+        //   'dropoff': dropOffTextEditingController.text.trim(),
+        //   'seats': seatTextEditingController.text.trim(),
+        // };
+
+        try {
+          final response = await http.put(uri, body: formData);
+
+          if (response.statusCode == 200) {
+            setState(() {
+              responseData = response.body;
+            });
+            await Fluttertoast.showToast(msg: 'Successfully Booked');
+            // Navigator.push(context, MaterialPageRoute(builder: (c) => ResultScreen()));
+          } else {
+            await Fluttertoast.showToast(msg: 'Error ${response.statusCode}');
+          }
+        } catch (error) {
+          await Fluttertoast.showToast(msg: 'Error $error');
+        }
+      }
+    }
+
     //   validate all the form fields
     // if (_formKey.currentState!.validate()) {
     //   await firebaseAuth.createUserWithEmailAndPassword(
@@ -62,11 +101,11 @@ class _MainScreenState extends State<MainScreen> {
     //     Fluttertoast.showToast(msg: "Error!! \n $errorMessage");
     //   });
     // }
-    if (_formKey.currentState!.validate()) {
-      Fluttertoast.showToast(msg: "Auto booked");
-    } else {
-      Fluttertoast.showToast(msg: "Not all fields are valid");
-    }
+    // if (_formKey.currentState!.validate()) {
+    //   Fluttertoast.showToast(msg: "Auto booked");
+    // } else {
+    //   Fluttertoast.showToast(msg: "Not all fields are valid");
+    // }
   }
 
   // String _dropdownValue = '1';
@@ -353,6 +392,10 @@ class _MainScreenState extends State<MainScreen> {
                                 ),
                               ),
                             ),
+
+                            const SizedBox(height: 10.0,),
+
+                            Text(responseData),
                           ],
                         ),
                       ),
